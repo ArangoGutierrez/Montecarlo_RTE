@@ -41,7 +41,7 @@ double random_eng()
 		X = fmod ((a*X+c),M);// Linear congruence
 		n = (X/(M-1));
 		}  
-	return n;
+	return n;// Returns a number n with a [0,1) domain
 }
 /* Newton Method function for Rayleigh Scattering angle*/
 long double NM(long double y) 
@@ -77,19 +77,19 @@ void BM(int lambda,double SunPos, vector<double>* brmt) //Vector passed by refer
 	double teta;
 	int f,t,i;
 	double re=16367444.7;	//Earth center to Exosphere 16377.4447Km in m
-	double re=6970948.7;	//Earth center to Thermosphere 6970.9487 km in m
+	double rth=6970948.7;	//Earth center to Thermosphere 6970.9487 km in m
 	double rt=6377444.7;	//Earth center to Troposphere 6377.4447Km in m
 	double rsea=6367444.7;	//Earth center to Sea lvl  6367.4447km in m
 	double rcali=6368444.7;	//Earth center to Cali lvl  6368.4447km in m
-	//Photons (Xo,Yo) in Troposphere
-	dg=(1.531877998)+SunPos*0.003243194083333;	//Astronomical Horizon
-	xo=re*cos(dg);
-	yo=re*sin(dg);
+	//Photons (Xo,Yo) in Thermosphere
+	dg=(1.1516233221444718)+(random_eng()*0.8383460093);	//Astronomical Horizon
+	xo=rth*cos(dg);
+	yo=rth*sin(dg);
 	xa=xo;
 	ya=yo;
-	//Zenith Dependent with a 2 degree range
-	tsd=0.130899694;/*Degree step*/
-	te = ((SunPos*tsd)+pi)+(0.017453293*(random_eng())*pow(-1,int (random_eng()*10)));	
+	tsd=0.0698621674417374583;/*Degree step*/
+	//Zenith Dependent with a +/- 2 degree range
+	te = ((SunPos*tsd)+pi)+(0.017453293*(random_eng())*pow(-1,int (random_eng()*10)));
 	vector<double> tao (1);
 	SC(lambda, &tao);
 	ltao=tao[0];
@@ -106,7 +106,7 @@ void BM(int lambda,double SunPos, vector<double>* brmt) //Vector passed by refer
 	l = (-1.0/ltao)*log(1.0-random_eng());
 	vx = l*cos(te);
 	vy = l*sin(te);
-	}while(((xa*xa)+(ya*ya)<(pow(re,2))) && (ya>=rcali) && ((pow(xa,2)+pow(ya,2))>=(pow(rt,2))));	
+	}while(((xa*xa)+(ya*ya)<(pow(rth,2))) && (ya>=rcali) && ((pow(xa,2)+pow(ya,2))>=(pow(rt,2))));	
 		if(((pow(xa,2)+pow((ya),2))<=(pow(rt,2))))
 		{	
 		m=(-ya+yb)/(-xa+xb);
@@ -118,7 +118,7 @@ void BM(int lambda,double SunPos, vector<double>* brmt) //Vector passed by refer
 		}
 		else brmt->at(0)=-1;
 }
-double AM0v_to_i(int lambda) // Energy Correction function
+double AM0v_to_iters(int lambda) // Energy Correction function
 {
 	double iters; //Number of Iterations 
 	int j	=	lambda-380;
@@ -205,7 +205,7 @@ float vlambda[322][2] = {
 {696,1426},	{697,1416},	{698,1420.5},	{699,1425},
 {700,1405.5},	{701,1386}
 };
-iters=vlambda[j][1];
+iters=(int) ((vlambda[j][1])/582.3)*1000000; //Energy Normalization
 return iters;
 }
 /*MonteCarlo*/
@@ -218,12 +218,11 @@ int main(int argc, char *argv[])
 	FILE *dskw1;
 	char FileName[50];
 	int file;
+	double teta,iters;
   	file=sprintf(FileName,"./OutputData/MC_RTE_v1.2_%d_%d.dat",SunPos,lambda);
 	file++;
   	dskw1=fopen(FileName,"w+");
 	iters=AM0v_to_iters(lambda);
-	double teta,iters;
-	/*double nrolls=1000000;*/
 	for(i=0;i<iters;i++)
 	{
 	vector<double> brmt (1);
